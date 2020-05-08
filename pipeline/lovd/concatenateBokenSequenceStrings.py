@@ -6,7 +6,6 @@ Description:
 """
 
 import argparse
-import pdb
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -26,14 +25,21 @@ def main():
     for line in f_in:
         line = line.rstrip()
         c = line[-1]
-        if c == 'A' or c == 'C' or c == 'T' or c == 'G':
+        if c != '"':
             if line_out == '':
                 line_out = line
             else:
                 line_out += line
             appended = True
         else:
-            f_out.write(line_out)
+            if appended == True:
+                line_out += line
+            if line_out == '':
+                f_out.write(line + '\n')
+            else:
+                f_out.write(line_out + '\n')
+            appended = False
+            line_out = ''
 
     f_in.close()
     f_out.close()
