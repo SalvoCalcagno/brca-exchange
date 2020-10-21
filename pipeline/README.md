@@ -81,7 +81,7 @@ brca_upstream                   <-- BRCA exchange code base
 monthly_releases
 ├── data_release_TAG            <-- release working dir
 │   ├── code                    <-- clone of git repository
-│   ├── brca_out                <-- pipeline working directory
+│   ├── data_out                <-- pipeline working directory
 │   └── resources               <-- e.g. reference sequences
 │   └── references              <-- e.g. reference sequences for the splicing pipeline (may be merged in the future)
 previous_releases               <-- released archives of previous releases
