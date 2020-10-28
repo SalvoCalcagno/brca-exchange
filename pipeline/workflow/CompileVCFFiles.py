@@ -464,8 +464,8 @@ class ConcatenateG1KData(DefaultPipelineTask):
         for symbol in self.cfg.gene_metadata['symbol']:
             args_for_concatenate_step.append(self.g1k_file_dir + f"/1000G_{symbol}.hg37.vcf")
 
-        pipeline_utils.run_process(args_for_concatenate_step, redirect_stdout_path=self.output())
-        pipeline_utils.check_file_for_contents(self.output())
+        pipeline_utils.run_process(args_for_concatenate_step, redirect_stdout_path=self.output().path)
+        pipeline_utils.check_file_for_contents(self.output().path)
 
 
 @requires(ConcatenateG1KData)
@@ -478,12 +478,12 @@ class CrossmapG1KData(DefaultPipelineTask):
 
         args = ["CrossMap.py", "vcf",
                 brca_resources_dir + "/hg19ToHg38.over.chain.gz",
-                self.input(),
+                self.input().path,
                 brca_resources_dir + "/hg38.fa",
-                self.output()]
+                self.output().path]
 
         pipeline_utils.run_process(args)
-        pipeline_utils.check_file_for_contents(self.output())
+        pipeline_utils.check_file_for_contents(self.output().path)
 
 
 @requires(CrossmapG1KData)
@@ -494,8 +494,8 @@ class SortG1KData(DefaultPipelineTask):
     def run(self):
         args = ["vcf-sort", self.input()]
 
-        pipeline_utils.run_process(args, redirect_stdout_path=self.output())
-        pipeline_utils.check_file_for_contents(self.output())
+        pipeline_utils.run_process(args, redirect_stdout_path=self.output().path)
+        pipeline_utils.check_file_for_contents(self.output().path)
 
 
 @requires(SortG1KData)
@@ -505,7 +505,7 @@ class CopyG1KOutputToOutputDir(DefaultPipelineTask):
 
     def run(self):
         copy(self.input(), self.cfg.output_dir)
-        pipeline_utils.check_file_for_contents(self.output())
+        pipeline_utils.check_file_for_contents(self.output().path)
 
 
 ###############################################
