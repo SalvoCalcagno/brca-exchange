@@ -492,7 +492,7 @@ class SortG1KData(DefaultPipelineTask):
         return luigi.LocalTarget(self.g1k_file_dir + f"/1000G.sorted.hg38.vcf")
 
     def run(self):
-        args = ["vcf-sort", self.input()]
+        args = ["vcf-sort", self.input().path]
 
         pipeline_utils.run_process(args, redirect_stdout_path=self.output().path)
         pipeline_utils.check_file_for_contents(self.output().path)
@@ -504,7 +504,7 @@ class CopyG1KOutputToOutputDir(DefaultPipelineTask):
         return luigi.LocalTarget(self.cfg.output_dir + f"/1000G.sorted.hg38.vcf")
 
     def run(self):
-        copy(self.input(), self.cfg.output_dir)
+        copy(self.input().path, self.cfg.output_dir)
         pipeline_utils.check_file_for_contents(self.output().path)
 
 
