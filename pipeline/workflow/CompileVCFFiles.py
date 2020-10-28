@@ -486,7 +486,7 @@ class CrossmapG1KData(DefaultPipelineTask):
         pipeline_utils.check_file_for_contents(self.output())
 
 
-@requires(CrossmapConcatenatedG1KData)
+@requires(CrossmapG1KData)
 class SortG1KData(DefaultPipelineTask):
     def output(self):
         return luigi.LocalTarget(self.g1k_file_dir + f"/1000G.sorted.hg38.vcf")
