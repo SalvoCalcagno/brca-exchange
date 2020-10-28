@@ -15,7 +15,7 @@ output/1000G_brca.sorted.hg38.vcf   		Variants selected from 1000
 				    		Genomes, with genotype data.
 output/1000G_brca.sorted.hg38.vcffor_pipeline	Variants from 1000 Genomes,
 						without genotype data
-output/ClinVarBrca.vcf			BRCA variants from ClinVar at NCBI.
+output/ClinVar.vcf			BRCA variants from ClinVar at NCBI.
 output/ENIGMA_combined_with_bx_ids.tsv	Tab-delimited file of the ENIGMA
 					clinical significance data.
 output/bic_brca12.sorted.hg38.vcf	Variants from the Breast Cancer

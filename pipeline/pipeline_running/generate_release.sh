@@ -3,7 +3,7 @@
 ROOT_DIR=$(realpath $1)
 CREDENTIALS_PATH=$(realpath $2)
 PREVIOUS_RELEASE_DIR=$(realpath $3)
-GENE_CONFIG_FILE=$(realpath $4)
+GENE_CONFIG_FILENAME=$(realpath $4)
 
 GIT_COMMIT=${5:-"master"}
 
@@ -34,5 +34,5 @@ echo "cd ${CODE_BASE}/pipeline && make [cmd]"
 
 echo "Kicking off pipeline!"
 cd "${CODE_BASE}/pipeline"
-make GENE_CONFIG_FILE="${GENE_CONFIG_FILE}" build-release
+make GENE_CONFIG_FILENAME="${GENE_CONFIG_FILENAME}" build-release
 

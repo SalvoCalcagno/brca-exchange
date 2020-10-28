@@ -348,7 +348,7 @@ LIST_TYPE_FIELDS = {
 ENIGMA_FILE = "enigma_from_clinvar.tsv"
 
 GENOME1K_FILE = "1000G_BRCA12.sorted.hg38.vcf"
-CLINVAR_FILE = "ClinVarBrca.vcf"
+CLINVAR_FILE = "ClinVar.vcf"
 LOVD_FILE = "sharedLOVD_BRCA.sorted.hg38.vcf"
 EX_LOVD_FILE = "exLOVD_brca12.sorted.hg38.vcf"
 BIC_FILE = "bic_brca12.sorted.hg38.vcf"

@@ -17,11 +17,12 @@ LUIGI_WORKERS = 8
 # since seqrepo is huge and thus won't be located in the same place as the rest of the resources
 SEQ_REPO_DIR_DOCKER := /files/resources/seq_repo
 
-ifndef GENE_CONFIG_FILE
-	$(error please specify a GENE_CONFIG_FILE)
+ifndef GENE_CONFIG_FILENAME
+GENE_CONFIG_FILE = /opt/brca-exchange/pipeline/workflow/gene_config_brca_only.txt
+else
+GENE_CONFIG_FILE = /opt/brca-exchange/pipeline/workflow/$(GENE_CONFIG_FILENAME)
 endif
 
-GENE_CONFIG_FILE := /opt/brca-exchange/pipeline/workflow/$(GENE_CONFIG_FILE)
 
 init: ## setup config file
 	echo "creating file in $(CONFIG_PATH). Please edit to your needs in particular the WORK_DIR!"
