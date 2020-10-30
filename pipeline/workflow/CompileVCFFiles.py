@@ -299,11 +299,7 @@ class ConcatenateLOVDData(DefaultPipelineTask):
         return luigi.LocalTarget(self.lovd_file_dir + f"/lovd_concatenated_genes.txt")
 
     def run(self):
-        args_for_concatenate_step = ["vcf-concat"]
-        for symbol in self.cfg.gene_metadata['symbol']:
-            args_for_concatenate_step.append(self.lovd_file_dir + f"/{symbol}.txt")
-
-        pipeline_utils.run_process(args_for_concatenate_step, redirect_stdout_path=self.output().path)
+        pipeline_utils.concatenate_files_with_identical_headers(self.lovd_file_dir, self.output().path)
         pipeline_utils.check_file_for_contents(self.output().path)
 
 

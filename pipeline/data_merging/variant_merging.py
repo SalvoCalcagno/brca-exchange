@@ -3,7 +3,6 @@
 this scripts takes the enigma variant list and merge vcf files in a folder into
 the exisitng enigma variants:
 """
-import pdb
 import argparse
 import csv
 import logging
@@ -52,7 +51,6 @@ def main():
 
     genome_regions_symbol_dict = config.get_genome_regions_symbol_dict(gene_config_df, 'start_hg38_legacy_variants', 'end_hg38_legacy_variants')
 
-    pdb.set_trace()
     gene_symbols = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
 
     seq_provider = seq_utils.SeqRepoWrapper(regions_preload=gene_regions_dict.keys())
