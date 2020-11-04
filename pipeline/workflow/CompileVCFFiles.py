@@ -666,18 +666,20 @@ class CopyFindlayBRCA1RingFunctionScoresOutputToOutputDir(DefaultPipelineTask):
 
 class MergeVCFsIntoTSVFile(DefaultPipelineTask):
     def requires(self):
-        yield pipeline_common.CopyOutputToOutputDir(self.cfg.output_dir,
-                                                    esp_processing.SortConcatenatedESPData())
-        yield pipeline_common.CopyOutputToOutputDir(self.cfg.output_dir,
-                                                    gnomad_processing.SortGnomADData())
-        yield CopyClinvarVCFToOutputDir()
-        yield CopyBICOutputToOutputDir()
+        if 'BRCA1' in self.cfg.gene_metadata['symbol'] or 'BRCA2' in self.cfg.gene_metadata['symbol']:
+            yield pipeline_common.CopyOutputToOutputDir(self.cfg.output_dir,
+                                                        esp_processing.SortConcatenatedESPData())
+            yield pipeline_common.CopyOutputToOutputDir(self.cfg.output_dir,
+                                                        gnomad_processing.SortGnomADData())
+            yield CopyBICOutputToOutputDir()
+            yield CopyEXACOutputToOutputDir()
+            yield CopyEXLOVDOutputToOutputDir()
+            yield CopyEnigmaOutputToOutputDir()
+            yield CopyFindlayBRCA1RingFunctionScoresOutputToOutputDir()
+
         yield CopyG1KOutputToOutputDir()
-        yield CopyEXACOutputToOutputDir()
-        yield CopyEXLOVDOutputToOutputDir()
         yield CopySharedLOVDOutputToOutputDir()
-        yield CopyEnigmaOutputToOutputDir()
-        yield CopyFindlayBRCA1RingFunctionScoresOutputToOutputDir()
+        yield CopyClinvarVCFToOutputDir()
 
     def output(self):
         return {'merged': luigi.LocalTarget(os.path.join(self.artifacts_dir, "merged.tsv")),
