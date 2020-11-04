@@ -3,6 +3,8 @@ import argparse
 import copy
 import csv
 import re
+from common import config
+from workflow import pipeline_utils
 from data_merging.utilities import isEmpty, round_sigfigs
 
 csv.field_size_limit(10000000)
@@ -41,12 +43,40 @@ FIELDS_TO_RENAME = {"Gene_symbol_ENIGMA": "Gene_Symbol",
 
 
 def main():
+    global GENE_SYMBOLS
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input",
                         default="/hive/groups/cgl/brca/release1.0/merged_withVEP_cleaned.csv")
     parser.add_argument("-o", "--output",
                         default="/hive/groups/cgl/brca/release1.0/aggregated.csv")
+    parser.add_argument("-c", "--config")
     args = parser.parse_args()
+
+
+    parser = argparse.ArgumentParser()
+    options(parser)
+
+    args = parser.parse_args()
+
+    gene_config_df = config.load_config(args.config)
+
+    GENE_SYMBOLS = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
+
+    if "BRCA1" not in GENE_SYMBOLS and "BRCA2" not in GENE_SYMBOLS:
+        brca_only_fields_to_remove = ["HGVS_cDNA_exLOVD",
+                                     "HGVS_protein_exLOVD",
+                                     "polyPhen2_result_ESP",
+                                     "BIC_Designation_BIC",
+                                     "BIC_Nomenclature_exLOVD"]
+
+        for field in brca_only_fields_to_remove:
+            FIELDS_TO_REMOVE.remove(field)
+
+        brca_only_fields_to_rename = ["Genomic_Coordinate"]
+
+        for field in brca_only_fields_to_rename:
+            del FIELDS_TO_RENAME[field]
 
     csvIn = csv.DictReader(open(args.input, "r"), delimiter='\t')
     outputColumns = setOutputColumns(csvIn.fieldnames, FIELDS_TO_REMOVE,
@@ -80,7 +110,8 @@ def updateRow(row, toRename, toRemove):
     newRow = update_basic_fields(row, toRename)
     (newRow["Reference_Sequence"], newRow["HGVS_cDNA"]) = hgvsCdnaUpdate(newRow)
     newRow["HGVS_Protein"] = hgvsProteinUpdate(row)
-    newRow["BIC_Nomenclature"] = BICUpdate(row)
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        newRow["BIC_Nomenclature"] = BICUpdate(row)
     (newRow["Pathogenicity_expert"],
      newRow["Pathogenicity_all"]) = pathogenicityUpdate(newRow)
     newRow["Allele_Frequency"] = selectAlleleFrequency(newRow)
@@ -142,7 +173,7 @@ def hgvsCdnaUpdate(row):
             (refSequence, hgvs) = unpackHgvs(row["HGVS_ClinVar"])
         elif row["HGVS_cDNA_LOVD"] != EMPTY:
             (refSequence, hgvs) = unpackHgvs(row["HGVS_cDNA_LOVD"])
-        elif row["HGVS_cDNA_exLOVD"] != EMPTY:
+        elif ("BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS) and row["HGVS_cDNA_exLOVD"] != EMPTY:
             (refSequence, hgvs) = unpackHgvs(row["HGVS_cDNA_exLOVD"])
     return(refSequence, hgvs)
 
@@ -154,7 +185,7 @@ def hgvsProteinUpdate(row):
             protein = row["Protein_ClinVar"]
         elif row["HGVS_protein_LOVD"] != EMPTY:
             protein = row["HGVS_protein_LOVD"]
-        elif row["HGVS_protein_exLOVD"] != EMPTY:
+        elif ("BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS) and row["HGVS_protein_exLOVD"] != EMPTY:
             protein = row["HGVS_protein_exLOVD"]
     # 8/24/16: this is an error condition that should not occur.  There should be
     # an assertion checking the input that no value is empty.  We know in practice
@@ -179,16 +210,19 @@ def BICUpdate(row):
 
 
 def pathogenicityUpdate(row):
-    pathoExpert = row["Clinical_significance_ENIGMA"]
-    if pathoExpert == EMPTY:
-        pathoExpert = "Not Yet Reviewed"
-    if pathoExpert == "Benign":
-        pathoExpert = "Benign / Little Clinical Significance"
     pathoAll = ""
     delimiter = ""
-    if row["Clinical_significance_ENIGMA"] != EMPTY:
-        pathoAll = row["Clinical_significance_ENIGMA"] + "(ENIGMA)"
-        delimiter = "; "
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        pathoExpert = row["Clinical_significance_ENIGMA"]
+        if pathoExpert == EMPTY:
+            pathoExpert = "Not Yet Reviewed"
+        if pathoExpert == "Benign":
+            pathoExpert = "Benign / Little Clinical Significance"
+        if row["Clinical_significance_ENIGMA"] != EMPTY:
+            pathoAll = row["Clinical_significance_ENIGMA"] + "(ENIGMA)"
+            delimiter = "; "
+    else:
+        pathoExpert = EMPTY
     if row["Clinical_Significance_ClinVar"] != EMPTY:
         pathoAll = "%s%s%s (ClinVar)" % (pathoAll, delimiter,
                                                row["Clinical_Significance_ClinVar"])
@@ -219,18 +253,24 @@ def determineGnomADAlleleFrequency(row):
 
 
 def selectAlleleFrequency(row):
-    gnomAD_AF = determineGnomADAlleleFrequency(row)
-    if gnomAD_AF != EMPTY:
-        return "%s (GnomAD)" % gnomAD_AF
-    elif row["Allele_frequency_ExAC"] != EMPTY:
-        return "%s (ExAC minus TCGA)" % row["Allele_frequency_ExAC"]
-    elif row["Minor_allele_frequency_percent_ESP"] != EMPTY:
-        # Percent must be converted to a fraction
-        return "%s (ESP)" % (float(row["Minor_allele_frequency_percent_ESP"].split(',')[-1])/100)
-    elif row["Allele_frequency_1000_Genomes"] != EMPTY:
-        return "%s (1000 Genomes)" % row["Allele_frequency_1000_Genomes"]
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        gnomAD_AF = determineGnomADAlleleFrequency(row)
+        if gnomAD_AF != EMPTY:
+            return "%s (GnomAD)" % gnomAD_AF
+        elif row["Allele_frequency_ExAC"] != EMPTY:
+            return "%s (ExAC minus TCGA)" % row["Allele_frequency_ExAC"]
+        elif row["Minor_allele_frequency_percent_ESP"] != EMPTY:
+            # Percent must be converted to a fraction
+            return "%s (ESP)" % (float(row["Minor_allele_frequency_percent_ESP"].split(',')[-1])/100)
+        elif row["Allele_frequency_1000_Genomes"] != EMPTY:
+            return "%s (1000 Genomes)" % row["Allele_frequency_1000_Genomes"]
+        else:
+            return EMPTY
     else:
-        return EMPTY
+        if row["Allele_frequency_1000_Genomes"] != EMPTY:
+            return "%s (1000 Genomes)" % row["Allele_frequency_1000_Genomes"]
+        else:
+            return EMPTY
 
 
 def selectMaxAlleleFrequency(newRow):
@@ -241,7 +281,11 @@ def selectMaxAlleleFrequency(newRow):
 def checkDiscordantStatus(row):
     hasPathogenicClassification = False
     hasBenignClassification = False
-    for column in (row["Clinical_Significance_ClinVar"], row["Clinical_significance_ENIGMA"]):
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        relevantRows = (row["Clinical_Significance_ClinVar"], row["Clinical_significance_ENIGMA"])
+    else:
+        relevantRows = [row["Clinical_Significance_ClinVar"]]
+    for column in relevantRows:
         for item in column.split(","):
             if re.search("^pathogenic$", item.lower()):
                 hasPathogenicClassification = True
@@ -272,10 +316,11 @@ def checkDiscordantStatus(row):
 def setSourceUrls(row):
     url = ""
     delimiter = ""
-    if row["URL_ENIGMA"] != EMPTY:
-        for thisURL in row["URL_ENIGMA"].split(','):
-            url = "%s%s%s" % (url, delimiter, thisURL)
-            delimiter = ", "
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        if row["URL_ENIGMA"] != EMPTY:
+            for thisURL in row["URL_ENIGMA"].split(','):
+                url = "%s%s%s" % (url, delimiter, thisURL)
+                delimiter = ", "
     if row["SCV_ClinVar"] != EMPTY:
         for thisSCV in row["SCV_ClinVar"].split(','):
             variantUrl = "http://www.ncbi.nlm.nih.gov/clinvar/?term=" + thisSCV
@@ -290,7 +335,10 @@ def setSourceUrls(row):
 def setSynonym(row):
     synonyms = set()
 
-    fields = ["BIC_Nomenclature", "BIC_Nomenclature_exLOVD", "BIC_Designation_BIC", "Synonyms_ClinVar"]
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        fields = ["BIC_Nomenclature", "BIC_Nomenclature_exLOVD", "BIC_Designation_BIC", "Synonyms_ClinVar"]
+    else:
+        fields = ["Synonyms_ClinVar"]
 
     for c in fields:
         synonyms.update(s for s in row[c].split(',') if s is not EMPTY)

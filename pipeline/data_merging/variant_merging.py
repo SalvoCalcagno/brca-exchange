@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-this scripts takes the enigma variant list and merge vcf files in a folder into
-the exisitng enigma variants:
+this script merges all variants from different sources together into a single output file
+it also merges equivalent variants together
 """
 import argparse
 import csv
@@ -37,6 +37,7 @@ def options(parser):
 
 def main():
     global DISCARDED_REPORTS_WRITER
+    global GENE_SYMBOLS
 
     parser = argparse.ArgumentParser()
     options(parser)
@@ -51,7 +52,7 @@ def main():
 
     genome_regions_symbol_dict = config.get_genome_regions_symbol_dict(gene_config_df, 'start_hg38_legacy_variants', 'end_hg38_legacy_variants')
 
-    gene_symbols = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
+    GENE_SYMBOLS = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
 
     seq_provider = seq_utils.SeqRepoWrapper(regions_preload=gene_regions_dict.keys())
 
@@ -91,8 +92,9 @@ def main():
     # write final output to file
     write_new_tsv(args.output + "merged.tsv", columns, variants)
 
-    # copy enigma file to artifacts directory along with other ready files
-    copy(os.path.join(args.input, ENIGMA_FILE), args.output)
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        # copy enigma file to artifacts directory along with other ready files
+        copy(os.path.join(args.input, ENIGMA_FILE), args.output)
 
     # write reports to reports file
     aggregate_reports.write_reports_tsv(args.output + "reports.tsv", columns, args.output, genome_regions_symbol_dict)
@@ -423,21 +425,29 @@ def string_comparison_merge(variants, seq_wrapper):
 
 
 def preprocessing(input_dir, output_dir, seq_provider, gene_regions_trees):
-    # Preprocessing variants:
-    source_dict = {
-                   "1000_Genomes": GENOME1K_FILE + "for_pipeline",
-                   "ClinVar": CLINVAR_FILE,
-                   "LOVD": LOVD_FILE,
-                   "exLOVD": EX_LOVD_FILE,
-                   "ExAC": EXAC_FILE,
-                   "ESP": ESP_FILE,
-                   "BIC": BIC_FILE,
-                   "GnomAD": GNOMAD_FILE,
-                   "Findlay_BRCA1_Ring_Function_Scores": FINDLAY_BRCA1_RING_FUNCTION_SCORES_FIELDS_FILE
-                   }
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        # Preprocessing variants:
+        source_dict = {
+                       "1000_Genomes": GENOME1K_FILE + "for_pipeline",
+                       "ClinVar": CLINVAR_FILE,
+                       "LOVD": LOVD_FILE,
+                       "exLOVD": EX_LOVD_FILE,
+                       "ExAC": EXAC_FILE,
+                       "ESP": ESP_FILE,
+                       "BIC": BIC_FILE,
+                       "GnomAD": GNOMAD_FILE,
+                       "Findlay_BRCA1_Ring_Function_Scores": FINDLAY_BRCA1_RING_FUNCTION_SCORES_FIELDS_FILE
+                       }
+    else:
+        source_dict = {
+                       "1000_Genomes": GENOME1K_FILE + "for_pipeline",
+                       "ClinVar": CLINVAR_FILE,
+                       "LOVD": LOVD_FILE,
+                       }
     print("\n" + input_dir + ":")
     print("---------------------------------------------------------")
-    print("ENIGMA: {0}".format(ENIGMA_FILE))
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        print("ENIGMA: {0}".format(ENIGMA_FILE))
     for source_name, file_name in source_dict.items():
         print(source_name, ":", file_name)
     print("\n------------preprocessing--------------------------------")
@@ -462,8 +472,9 @@ def preprocessing(input_dir, output_dir, seq_provider, gene_regions_trees):
         repeat_merging(f_in, f_out)
         source_dict[source_name] = f_out.name
 
-    print("-------check if genomic coordinates are correct----------")
-    (columns, variants) = save_enigma_to_dict(os.path.join(input_dir, ENIGMA_FILE), output_dir, seq_provider, gene_regions_trees)
+    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+        print("-------check if genomic coordinates are correct----------")
+        (columns, variants) = save_enigma_to_dict(os.path.join(input_dir, ENIGMA_FILE), output_dir, seq_provider, gene_regions_trees)
 
     new_source_dict = {}
     for source_name, file_name in source_dict.items():
