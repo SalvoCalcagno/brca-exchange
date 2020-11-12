@@ -96,16 +96,18 @@ class DefaultPipelineTask(luigi.Task):
         self.diff_dir = pipeline_utils.create_path_if_nonexistent(self.release_dir + "/diff")
         self.metadata_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.output_dir + "/release/metadata/")
 
+        if 'BRCA1' in self.cfg.gene_metadata['symbol'] or 'BRCA2' in self.cfg.gene_metadata['symbol']:
+            self.esp_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/ESP")
+            self.bic_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/BIC")
+            self.gnomad_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/gnomAD")
+            self.ex_lovd_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/exLOVD")
+            self.exac_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/exac')
+            self.enigma_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/enigma')
+            self.assays_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/functional_assays')
+
         self.clinvar_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/ClinVar")
-        self.esp_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/ESP")
-        self.bic_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/BIC")
-        self.gnomad_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/gnomAD")
-        self.ex_lovd_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/exLOVD")
-        self.lovd_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/LOVD")
         self.g1k_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/G1K')
-        self.exac_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/exac')
-        self.enigma_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/enigma')
-        self.assays_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/functional_assays')
+        self.lovd_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/LOVD")
 
     def on_failure(self, exception):
         # renaming files by prefixing filename with "FAILURE_". This way, on rerunning the pipeline the failed task is
