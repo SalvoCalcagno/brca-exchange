@@ -90,8 +90,6 @@ class CopyClinvarVCFToOutputDir(DefaultPipelineTask):
         return luigi.LocalTarget(self.cfg.output_dir + "/ClinVar.vcf")
 
     def run(self):
-        pipeline_utils.create_path_if_nonexistent(self.cfg.output_dir)
-
         copy(self.input().path, self.cfg.output_dir)
         pipeline_utils.check_file_for_contents(self.output().path)
 
@@ -103,14 +101,10 @@ class CopyClinvarVCFToOutputDir(DefaultPipelineTask):
 
 class DownloadBICData(DefaultPipelineTask):
     def output(self):
-        bic_file_dir = self.cfg.file_parent_dir + '/BIC'
-        return luigi.LocalTarget(bic_file_dir + "/bic_brca12.sorted.hg38.vcf")
+        return luigi.LocalTarget(self.bic_file_dir + "/bic_brca12.sorted.hg38.vcf")
 
     def run(self):
-        bic_file_dir = pipeline_utils.create_path_if_nonexistent(
-            self.cfg.file_parent_dir + '/BIC')
-
-        os.chdir(bic_file_dir)
+        os.chdir(self.bic_file_dir)
 
         brca1_data_url = "https://brcaexchange.org/backend/downloads/bic_brca12.sorted.hg38.vcf"
         pipeline_utils.download_file_and_display_progress(brca1_data_url)
@@ -123,10 +117,7 @@ class CopyBICOutputToOutputDir(DefaultPipelineTask):
         return luigi.LocalTarget(self.cfg.output_dir + "/bic_brca12.sorted.hg38.vcf")
 
     def run(self):
-        bic_file_dir = self.cfg.file_parent_dir + '/BIC'
-        pipeline_utils.create_path_if_nonexistent(self.cfg.output_dir)
-
-        copy(bic_file_dir + "/bic_brca12.sorted.hg38.vcf", self.cfg.output_dir)
+        copy(self.bic_file_dir + "/bic_brca12.sorted.hg38.vcf", self.cfg.output_dir)
         pipeline_utils.check_file_for_contents(self.output().path)
 
 
@@ -148,8 +139,6 @@ class ExtractDataFromLatestEXLOVD(DefaultPipelineTask):
                 'brca2': luigi.LocalTarget(os.path.join(self.ex_lovd_file_dir, "BRCA2.txt"))}
 
     def run(self):
-        pipeline_utils.create_path_if_nonexistent(self.ex_lovd_file_dir)
-
         # calculating host path because we are running a docker within a docker
         ex_lovd_file_dir_host = os.path.join(os.path.dirname(self.cfg.output_dir_host), ExtractDataFromLatestEXLOVD.dir_name)
 
@@ -668,6 +657,7 @@ class CopyFindlayBRCA1RingFunctionScoresOutputToOutputDir(DefaultPipelineTask):
 
 class MergeVCFsIntoTSVFile(DefaultPipelineTask):
     def requires(self):
+
         if 'BRCA1' in self.cfg.gene_metadata['symbol'] or 'BRCA2' in self.cfg.gene_metadata['symbol']:
             yield pipeline_common.CopyOutputToOutputDir(self.cfg.output_dir,
                                                         esp_processing.SortConcatenatedESPData())

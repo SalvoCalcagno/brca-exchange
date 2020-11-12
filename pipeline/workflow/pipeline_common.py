@@ -97,6 +97,9 @@ class DefaultPipelineTask(luigi.Task):
         self.metadata_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.output_dir + "/release/metadata/")
 
         self.clinvar_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/ClinVar")
+        self.esp_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/ESP")
+        self.bic_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/BIC")
+        self.gnomad_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/gnomAD")
         self.ex_lovd_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/exLOVD")
         self.lovd_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + "/LOVD")
         self.g1k_file_dir = pipeline_utils.create_path_if_nonexistent(self.cfg.file_parent_dir + '/G1K')

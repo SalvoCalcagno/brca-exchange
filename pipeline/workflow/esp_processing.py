@@ -21,10 +21,7 @@ logger = logging.getLogger('ESP')
 class ESPTask(DefaultPipelineTask):
     def __init__(self, *args, **kwargs):
         super(ESPTask, self).__init__(*args, **kwargs)
-        self.esp_file_dir = self.cfg.file_parent_dir + "/ESP"
         self.esp_tar_file_name = esp_data_url.split('/')[-1]
-
-        pipeline_utils.create_path_if_nonexistent(self.esp_file_dir)
 
 
 class DownloadLatestESPData(ESPTask):
