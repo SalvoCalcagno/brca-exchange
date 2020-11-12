@@ -92,7 +92,7 @@ def main():
     # write final output to file
     write_new_tsv(args.output + "merged.tsv", columns, variants)
 
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         # copy enigma file to artifacts directory along with other ready files
         copy(os.path.join(args.input, ENIGMA_FILE), args.output)
 
@@ -425,7 +425,7 @@ def string_comparison_merge(variants, seq_wrapper):
 
 
 def preprocessing(input_dir, output_dir, seq_provider, gene_regions_trees):
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         # Preprocessing variants:
         source_dict = {
                        "1000_Genomes": GENOME1K_FILE + "for_pipeline",
@@ -446,7 +446,7 @@ def preprocessing(input_dir, output_dir, seq_provider, gene_regions_trees):
                        }
     print("\n" + input_dir + ":")
     print("---------------------------------------------------------")
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         print("ENIGMA: {0}".format(ENIGMA_FILE))
     for source_name, file_name in source_dict.items():
         print(source_name, ":", file_name)
@@ -472,7 +472,7 @@ def preprocessing(input_dir, output_dir, seq_provider, gene_regions_trees):
         repeat_merging(f_in, f_out)
         source_dict[source_name] = f_out.name
 
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         print("-------check if genomic coordinates are correct----------")
         (columns, variants) = save_enigma_to_dict(os.path.join(input_dir, ENIGMA_FILE), output_dir, seq_provider, gene_regions_trees)
 
