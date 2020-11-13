@@ -475,6 +475,16 @@ def preprocessing(input_dir, output_dir, seq_provider, gene_regions_trees):
     if "BRCA12" in GENE_SYMBOLS:
         print("-------check if genomic coordinates are correct----------")
         (columns, variants) = save_enigma_to_dict(os.path.join(input_dir, ENIGMA_FILE), output_dir, seq_provider, gene_regions_trees)
+    else:
+        # FIXME: This is not an ideal solution, but by seeding the missing ENIGMA columns (non-brca genes are not currently gathered
+        #        from ENIGMA), it prevents column allignment issues.
+        columns = ['Source', 'Gene_symbol_ENIGMA', 'Genomic_Coordinate', 'Chr', 'Pos', 'Ref', 'Alt', 'Reference_sequence_ENIGMA',
+                   'HGVS_cDNA_ENIGMA', 'BIC_Nomenclature_ENIGMA', 'Abbrev_AA_change_ENIGMA', 'URL_ENIGMA', 'Condition_ID_type_ENIGMA',
+                   'Condition_ID_value_ENIGMA', 'Condition_category_ENIGMA', 'Clinical_significance_ENIGMA', 'Date_last_evaluated_ENIGMA',
+                   'Assertion_method_ENIGMA', 'Assertion_method_citation_ENIGMA', 'Clinical_significance_citations_ENIGMA',
+                   'Comment_on_clinical_significance_ENIGMA', 'Collection_method_ENIGMA', 'Allele_origin_ENIGMA',
+                   'ClinVarAccession_ENIGMA', 'HGVS_protein_ENIGMA', 'BX_ID_ENIGMA']
+        variants = {}
 
     new_source_dict = {}
     for source_name, file_name in source_dict.items():
