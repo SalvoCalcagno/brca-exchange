@@ -55,7 +55,6 @@ def main():
 
 
     parser = argparse.ArgumentParser()
-    options(parser)
 
     args = parser.parse_args()
 

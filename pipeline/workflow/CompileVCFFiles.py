@@ -702,7 +702,8 @@ class AggregateMergedOutput(DefaultPipelineTask):
 
         args = ["python", "aggregate_across_columns.py",
                 "-i", self.input()['merged'].path,
-                "-o", self.output().path]
+                "-o", self.output().path,
+                "-c", self.cfg.gene_config_path]
 
         pipeline_utils.run_process(args)
 
