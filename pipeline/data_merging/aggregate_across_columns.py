@@ -46,15 +46,12 @@ def main():
     global GENE_SYMBOLS
 
     parser = argparse.ArgumentParser()
+
     parser.add_argument("-i", "--input",
                         default="/hive/groups/cgl/brca/release1.0/merged_withVEP_cleaned.csv")
     parser.add_argument("-o", "--output",
                         default="/hive/groups/cgl/brca/release1.0/aggregated.csv")
     parser.add_argument("-c", "--config")
-    args = parser.parse_args()
-
-
-    parser = argparse.ArgumentParser()
 
     args = parser.parse_args()
 
