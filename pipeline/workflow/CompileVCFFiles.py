@@ -789,18 +789,21 @@ class CalculatePriors(DefaultPipelineTask):
         return luigi.LocalTarget(os.path.join(self.artifacts_dir, "built_with_priors.tsv"))
 
     def run(self):
-        artifacts_dir_host = self.cfg.output_dir_host + "/release/artifacts/"
-        os.chdir(priors_method_dir)
+        if 'BRCA1' in self.cfg.gene_metadata['symbol'] or 'BRCA2' in self.cfg.gene_metadata['symbol']:
+            artifacts_dir_host = self.cfg.output_dir_host + "/release/artifacts/"
+            os.chdir(priors_method_dir)
 
-        args = ['bash', 'calcpriors.sh', self.cfg.priors_references_dir,
-                artifacts_dir_host, 'built_with_mupit.tsv',
-                'built_with_priors.tsv', self.cfg.priors_docker_image_name]
+            args = ['bash', 'calcpriors.sh', self.cfg.priors_references_dir,
+                    artifacts_dir_host, 'built_with_mupit.tsv',
+                    'built_with_priors.tsv', self.cfg.priors_docker_image_name]
 
-        pipeline_utils.run_process(args)
+            pipeline_utils.run_process(args)
 
-        pipeline_utils.check_input_and_output_tsvs_for_same_number_variants(
-            self.input().path,
-            self.output().path)
+            pipeline_utils.check_input_and_output_tsvs_for_same_number_variants(
+                self.input().path,
+                self.output().path)
+        else:
+            copy(self.input().path, self.output().path)
 
 
 @requires(CalculatePriors)
@@ -809,20 +812,23 @@ class FilterBlacklistedPriors(DefaultPipelineTask):
         return luigi.LocalTarget(os.path.join(self.artifacts_dir, "built_with_priors_clean.tsv"))
 
     def run(self):
-        os.chdir(priors_filter_method_dir)
+        if 'BRCA1' in self.cfg.gene_metadata['symbol'] or 'BRCA2' in self.cfg.gene_metadata['symbol']:
+            os.chdir(priors_filter_method_dir)
 
-        args = ["python", "filterBlacklistedVars.py",
-                "--output", self.output().path,
-                "--blacklisted_vars", "blacklisted_vars.txt",
-                "filter",
-                self.input().path]
+            args = ["python", "filterBlacklistedVars.py",
+                    "--output", self.output().path,
+                    "--blacklisted_vars", "blacklisted_vars.txt",
+                    "filter",
+                    self.input().path]
 
-        pipeline_utils.run_process(args)
+            pipeline_utils.run_process(args)
 
-        # we only clear a few columns; we shouldn't be gaining or losing any variants
-        pipeline_utils.check_input_and_output_tsvs_for_same_number_variants(
-            self.input().path,
-            self.output().path)
+            # we only clear a few columns; we shouldn't be gaining or losing any variants
+            pipeline_utils.check_input_and_output_tsvs_for_same_number_variants(
+                self.input().path,
+                self.output().path)
+        else:
+            copy(self.input().path, self.output().path)
 
 
 @requires(FilterBlacklistedPriors)
