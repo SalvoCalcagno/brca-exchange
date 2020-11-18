@@ -69,11 +69,6 @@ def main():
         for field in brca_only_fields_to_remove:
             FIELDS_TO_REMOVE.remove(field)
 
-        brca_only_fields_to_rename = ["Genomic_Coordinate"]
-
-        for field in brca_only_fields_to_rename:
-            del FIELDS_TO_RENAME[field]
-
     csvIn = csv.DictReader(open(args.input, "r"), delimiter='\t')
     outputColumns = setOutputColumns(csvIn.fieldnames, FIELDS_TO_REMOVE,
                                      FIELDS_TO_ADD, FIELDS_TO_RENAME)
