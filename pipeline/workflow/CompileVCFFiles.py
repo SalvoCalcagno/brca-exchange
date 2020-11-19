@@ -857,7 +857,34 @@ class AppendVRId(DefaultPipelineTask):
             self.output().path)
 
 
-@requires(AppendVRId)
+@requires(FindMissingReports)
+class PruneUnnecessaryColumns(DefaultPipelineTask):
+    def output(self):
+        return {'built_pruned': luigi.LocalTarget(os.path.join(self.artifacts_dir, "built_pruned.tsv")),
+                'reports_pruned': luigi.LocalTarget(os.path.join(self.artifacts_dir, "reports_pruned.tsv"))}
+
+    def run(self):
+        os.chdir(data_merging_method_dir)
+
+        args = ["python", "pruneOutput.py", "-i",
+                self.input().path, "-o",
+                self.output()['built_pruned'].path,
+                "-c", self.cfg.gene_config_path]
+
+        pipeline_utils.run_process(args)
+
+        args = ["python", "pruneOutput.py", "-i",
+                os.path.join(self.artifacts_dir, "reports.tsv"),
+                "-o", self.output()['reports_pruned'].path,
+                "-c", self.cfg.gene_config_path]
+
+        pipeline_utils.run_process(args)
+
+        pipeline_utils.check_file_for_contents(self.output()['built_pruned'].path)
+        pipeline_utils.check_file_for_contents(self.output()['reports_pruned'].path)
+
+
+@requires(PruneUnnecessaryColumns)
 class FindMissingReports(DefaultPipelineTask):
     def output(self):
         return luigi.LocalTarget(os.path.join(self.artifacts_dir, "missing_reports.log"))
@@ -906,7 +933,7 @@ class RunDiffAndAppendChangeTypesToOutput(DefaultPipelineTask):
             previous_release_date, '%m-%d-%Y')
 
         args = ["python", "releaseDiff.py", "--v2",
-                os.path.join(self.artifacts_dir, "built_with_vr_ids.tsv"), "--v1",
+                os.path.join(self.artifacts_dir, "built_pruned.tsv"), "--v1",
                 previous_data_path,
                 "--removed", os.path.join(self.diff_dir, "removed.tsv"), "--added",
                 os.path.join(self.diff_dir, "added.tsv"), "--added_data",
@@ -922,7 +949,7 @@ class RunDiffAndAppendChangeTypesToOutput(DefaultPipelineTask):
         shutil.rmtree(tmp_dir)  # cleaning up
 
         pipeline_utils.check_input_and_output_tsvs_for_same_number_variants(
-            os.path.join(self.artifacts_dir, "built_with_vr_ids.tsv"),
+            os.path.join(self.artifacts_dir, "built_pruned.tsv"),
             os.path.join(self.release_dir, "built_with_change_types.tsv"))
 
 
@@ -954,7 +981,7 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
         tmp_dir = tempfile.mkdtemp()
         previous_data_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
-            'output/release/artifacts/reports.tsv')
+            'output/release/artifacts/reports_pruned.tsv')
         version_json_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
             'output/release/metadata/version.json')
@@ -963,7 +990,7 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
             previous_release_date, '%m-%d-%Y')
 
         args = ["python", "releaseDiff.py", "--v2",
-                os.path.join(self.artifacts_dir, "reports.tsv"), "--v1", previous_data_path,
+                os.path.join(self.artifacts_dir, "reports_pruned.tsv"), "--v1", previous_data_path,
                 "--removed", self.output()['removed_reports'].path, "--added",
                 self.output()['added_reports'].path, "--added_data",
                 self.output()['added_data_reports'].path, "--diff",
@@ -979,7 +1006,7 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
         shutil.rmtree(tmp_dir)  # cleaning up
 
         pipeline_utils.check_input_and_output_tsvs_for_same_number_variants(
-            os.path.join(self.artifacts_dir, "reports.tsv"),
+            os.path.join(self.artifacts_dir, "reports_pruned.tsv"),
             os.path.join(self.release_dir, "reports_with_change_types.tsv"))
 
 
