@@ -5,6 +5,7 @@ checks that all reports are accounted for in final pipeline output
 import argparse
 import os
 import pandas as pd
+from common import config
 from workflow import pipeline_utils
 
 BRCA_ONLY_FIELDS = ["mupit_structure",
@@ -31,7 +32,12 @@ BRCA_ONLY_FIELDS = ["mupit_structure",
                     "Collection_method_ENIGMA",
                     "Allele_origin_ENIGMA",
                     "ClinVarAccession_ENIGMA",
-                    "BX_ID_ENIGMA"]
+                    "BX_ID_ENIGMA",
+                    "Reference_sequence_ENIGMA",
+                    "HGVS_cDNA_ENIGMA",
+                    "BIC_Nomenclature_ENIGMA",
+                    "Abbrev_AA_change_ENIGMA",
+                    "HGVS_protein_ENIGMA"]
 
 
 def main():
@@ -40,24 +46,22 @@ def main():
                         help="input file to remove columns from")
     parser.add_argument("-o", "--output",
                         help="output file with removed columns")
-    parser.add_argument("c", "--config", help='configuration file to inform script')
+    parser.add_argument("-c", "--config", help='configuration file to inform script')
 
-    args = parser.parse_args()
+    options = parser.parse_args()
 
-    configure_logging()
-
-    gene_config_df = config.load_config(args.config)
+    gene_config_df = config.load_config(options.config)
 
     gene_symbols = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
 
-    pruned_df = prune_columns(pd.read_csv(args.input, sep='\t'), gene_symbols)
+    pruned_df = prune_columns(pd.read_csv(options.input, sep='\t'), gene_symbols)
 
-    pruned_df.to_csv(args.output, sep='\t', index=False)
+    pruned_df.to_csv(options.output, sep='\t', index=False)
 
 
 def prune_columns(df, gene_symbols):
     if "BRCA1" not in gene_symbols and "BRCA2" not in gene_symbols:
-        return df.drop(BRCA_ONLY_FIELDS, axis=1)
+        return df.drop(BRCA_ONLY_FIELDS, axis=1, errors='ignore')
     return df
 
 

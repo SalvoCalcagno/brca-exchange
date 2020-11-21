@@ -858,42 +858,33 @@ class AppendVRId(DefaultPipelineTask):
 
 
 @requires(AppendVRId)
-class PruneUnnecessaryColumnsVariants(DefaultPipelineTask):
+class PruneUnnecessaryColumns(DefaultPipelineTask):
     def output(self):
-        return luigi.LocalTarget(os.path.join(self.artifacts_dir, "built_pruned.tsv"))
+        return {'built_pruned': luigi.LocalTarget(os.path.join(self.artifacts_dir, "built_pruned.tsv")),
+                'reports_pruned': luigi.LocalTarget(os.path.join(self.artifacts_dir, "reports_pruned.tsv"))}
 
     def run(self):
         os.chdir(data_merging_method_dir)
 
-        args = ["python", "pruneOutput.py", "-i",
+        args = ["python", "prune_excess_columns.py", "-i",
                 self.input().path, "-o",
                 self.output()['built_pruned'].path,
                 "-c", self.cfg.gene_config_path]
 
         pipeline_utils.run_process(args)
 
-        pipeline_utils.check_file_for_contents(self.output().path)
-
-
-@requires(PruneUnnecessaryColumnsVariants)
-class PruneUnnecessaryColumnsReports(DefaultPipelineTask):
-    def output(self):
-        return luigi.LocalTarget(os.path.join(self.artifacts_dir, "reports_pruned.tsv"))
-
-    def run(self):
-        os.chdir(data_merging_method_dir)
-
-        args = ["python", "pruneOutput.py", "-i",
+        args = ["python", "prune_excess_columns.py", "-i",
                 os.path.join(self.artifacts_dir, "reports.tsv"),
-                "-o", self.output().path,
+                "-o", self.output()['reports_pruned'].path,
                 "-c", self.cfg.gene_config_path]
 
         pipeline_utils.run_process(args)
 
-        pipeline_utils.check_file_for_contents(self.output().path)
+        pipeline_utils.check_file_for_contents(self.output()['built_pruned'].path)
+        pipeline_utils.check_file_for_contents(self.output()['reports_pruned'].path)
 
 
-@requires(PruneUnnecessaryColumnsReports)
+@requires(PruneUnnecessaryColumns)
 class FindMissingReports(DefaultPipelineTask):
     def output(self):
         return luigi.LocalTarget(os.path.join(self.artifacts_dir, "missing_reports.log"))
@@ -902,8 +893,8 @@ class FindMissingReports(DefaultPipelineTask):
         os.chdir(data_merging_method_dir)
 
         args = ["python", "check_for_missing_reports.py", "-b",
-                os.path.join(self.artifacts_dir, "built_pruned.tsv"),
-                "-r", self.artifacts_dir,
+                self.input().path, "-r",
+                self.artifacts_dir,
                 "-a", self.artifacts_dir, "-v"]
 
         pipeline_utils.run_process(args)

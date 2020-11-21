@@ -11,8 +11,8 @@ from workflow.pipeline_common import DefaultPipelineTask, data_merging_method_di
 
 class ConvertBuiltToVCF(DefaultPipelineTask):
     def requires(self):
-        from workflow.CompileVCFFiles import AppendVRId
-        return AppendVRId()
+        from workflow.CompileVCFFiles import FindMissingReports
+        return FindMissingReports()
 
     def output(self):
         return luigi.LocalTarget(Path(self.cfg.output_dir)/'release'/'artifacts'/'bayesdel.vcf')
