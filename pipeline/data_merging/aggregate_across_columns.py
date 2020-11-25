@@ -9,7 +9,6 @@ from data_merging.utilities import isEmpty, round_sigfigs
 
 csv.field_size_limit(10000000)
 
-GENE_SYMBOLS = []
 EMPTY = "-"
 FIELDS_TO_REMOVE = ["Protein_ClinVar",
                     "Description_ClinVar",
@@ -56,9 +55,9 @@ def main():
 
     gene_config_df = config.load_config(args.config)
 
-    GENE_SYMBOLS = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
+    geneSymbols = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
 
-    if "BRCA12" not in GENE_SYMBOLS:
+    if "BRCA12" not in geneSymbols:
         brca_only_fields_to_remove = ["HGVS_cDNA_exLOVD",
                                      "HGVS_protein_exLOVD",
                                      "polyPhen2_result_ESP",
@@ -95,20 +94,20 @@ def setOutputColumns(fields, toRemove, toAdd, toRename):
     return(newFields)
 
 
-def updateRow(row, toRename, toRemove):
+def updateRow(row, toRename, toRemove, geneSymbols=["BRCA12"]):
     newRow = copy.deepcopy(row)
     newRow = update_basic_fields(row, toRename)
-    (newRow["Reference_Sequence"], newRow["HGVS_cDNA"]) = hgvsCdnaUpdate(newRow)
-    newRow["HGVS_Protein"] = hgvsProteinUpdate(row)
-    if "BRCA12" in GENE_SYMBOLS:
+    (newRow["Reference_Sequence"], newRow["HGVS_cDNA"]) = hgvsCdnaUpdate(newRow, geneSymbols)
+    newRow["HGVS_Protein"] = hgvsProteinUpdate(row, geneSymbols)
+    if "BRCA12" in geneSymbols:
         newRow["BIC_Nomenclature"] = BICUpdate(row)
     (newRow["Pathogenicity_expert"],
-     newRow["Pathogenicity_all"]) = pathogenicityUpdate(newRow)
-    newRow["Allele_Frequency"] = selectAlleleFrequency(newRow)
+     newRow["Pathogenicity_all"]) = pathogenicityUpdate(newRow, geneSymbols)
+    newRow["Allele_Frequency"] = selectAlleleFrequency(newRow, geneSymbols)
     newRow["Max_Allele_Frequency"] = selectMaxAlleleFrequency(newRow)
-    newRow["Discordant"] = checkDiscordantStatus(newRow)
-    newRow["Source_URL"] = setSourceUrls(newRow)
-    newRow["Synonyms"] = setSynonym(row)
+    newRow["Discordant"] = checkDiscordantStatus(newRow, geneSymbols)
+    newRow["Source_URL"] = setSourceUrls(newRow, geneSymbols)
+    newRow["Synonyms"] = setSynonym(row, geneSymbols)
     newRow["Genomic_Coordinate_hg37"] = EMPTY
     newRow["Hg37_Start"] = EMPTY
     newRow["Hg37_End"] = EMPTY
@@ -155,7 +154,7 @@ def unpackHgvs(hgvsString):
     return(transcript, suffix)
 
 
-def hgvsCdnaUpdate(row):
+def hgvsCdnaUpdate(row, geneSymbols=['BRCA12']):
     refSequence = row["Reference_Sequence"]
     hgvs = row["HGVS_cDNA"]
     if hgvs == EMPTY:
@@ -163,19 +162,19 @@ def hgvsCdnaUpdate(row):
             (refSequence, hgvs) = unpackHgvs(row["HGVS_ClinVar"])
         elif row["HGVS_cDNA_LOVD"] != EMPTY:
             (refSequence, hgvs) = unpackHgvs(row["HGVS_cDNA_LOVD"])
-        elif "BRCA12" in GENE_SYMBOLS and row["HGVS_cDNA_exLOVD"] != EMPTY:
+        elif "BRCA12" in geneSymbols and row["HGVS_cDNA_exLOVD"] != EMPTY:
             (refSequence, hgvs) = unpackHgvs(row["HGVS_cDNA_exLOVD"])
     return(refSequence, hgvs)
 
 
-def hgvsProteinUpdate(row):
+def hgvsProteinUpdate(row, geneSymbols=["BRCA12"]):
     protein = row["HGVS_Protein"]
     if protein == EMPTY:
         if row["Protein_ClinVar"] != EMPTY:
             protein = row["Protein_ClinVar"]
         elif row["HGVS_protein_LOVD"] != EMPTY:
             protein = row["HGVS_protein_LOVD"]
-        elif "BRCA12" in GENE_SYMBOLS and row["HGVS_protein_exLOVD"] != EMPTY:
+        elif "BRCA12" in geneSymbols and row["HGVS_protein_exLOVD"] != EMPTY:
             protein = row["HGVS_protein_exLOVD"]
     # 8/24/16: this is an error condition that should not occur.  There should be
     # an assertion checking the input that no value is empty.  We know in practice
@@ -199,10 +198,10 @@ def BICUpdate(row):
     return bic
 
 
-def pathogenicityUpdate(row):
+def pathogenicityUpdate(row, geneSymbols=["BRCA12"]):
     pathoAll = ""
     delimiter = ""
-    if "BRCA12" in GENE_SYMBOLS:
+    if "BRCA12" in geneSymbols:
         pathoExpert = row["Clinical_significance_ENIGMA"]
         if pathoExpert == EMPTY:
             pathoExpert = "Not Yet Reviewed"
@@ -242,8 +241,8 @@ def determineGnomADAlleleFrequency(row):
         return round_sigfigs(((ac_genome + ac_exome) / (an_genome + an_exome)), 4)
 
 
-def selectAlleleFrequency(row):
-    if "BRCA12" in GENE_SYMBOLS:
+def selectAlleleFrequency(row, geneSymbols=["BRCA12"]):
+    if "BRCA12" in geneSymbols:
         gnomAD_AF = determineGnomADAlleleFrequency(row)
         if gnomAD_AF != EMPTY:
             return "%s (GnomAD)" % gnomAD_AF
@@ -268,10 +267,10 @@ def selectMaxAlleleFrequency(newRow):
     return '-'
 
 
-def checkDiscordantStatus(row):
+def checkDiscordantStatus(row, geneSymbols=["BRCA12"]):
     hasPathogenicClassification = False
     hasBenignClassification = False
-    if "BRCA12" in GENE_SYMBOLS:
+    if "BRCA12" in geneSymbols:
         relevantRows = (row["Clinical_Significance_ClinVar"], row["Clinical_significance_ENIGMA"])
     else:
         relevantRows = [row["Clinical_Significance_ClinVar"]]
@@ -303,10 +302,10 @@ def checkDiscordantStatus(row):
         return "Concordant"
 
 
-def setSourceUrls(row):
+def setSourceUrls(row, geneSymbols=["BRCA12"]):
     url = ""
     delimiter = ""
-    if "BRCA12" in GENE_SYMBOLS:
+    if "BRCA12" in geneSymbols:
         if row["URL_ENIGMA"] != EMPTY:
             for thisURL in row["URL_ENIGMA"].split(','):
                 url = "%s%s%s" % (url, delimiter, thisURL)
@@ -322,10 +321,10 @@ def setSourceUrls(row):
         return EMPTY
 
 
-def setSynonym(row):
+def setSynonym(row, geneSymbols=["BRCA12"]):
     synonyms = set()
 
-    if "BRCA12" in GENE_SYMBOLS:
+    if "BRCA12" in geneSymbols:
         fields = ["BIC_Nomenclature", "BIC_Nomenclature_exLOVD", "BIC_Designation_BIC", "Synonyms_ClinVar"]
     else:
         fields = ["Synonyms_ClinVar"]
