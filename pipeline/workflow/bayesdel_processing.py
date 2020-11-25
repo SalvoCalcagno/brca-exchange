@@ -11,8 +11,8 @@ from workflow.pipeline_common import DefaultPipelineTask, data_merging_method_di
 
 class ConvertBuiltToVCF(DefaultPipelineTask):
     def requires(self):
-        from workflow.CompileVCFFiles import FindMissingReports
-        return FindMissingReports()
+        from workflow.CompileVCFFiles import PruneUnnecessaryColumns
+        return PruneUnnecessaryColumns()
 
     def output(self):
         return luigi.LocalTarget(Path(self.cfg.output_dir)/'release'/'artifacts'/'bayesdel.vcf')
@@ -20,7 +20,7 @@ class ConvertBuiltToVCF(DefaultPipelineTask):
     def run(self):
         os.chdir(data_merging_method_dir)
 
-        args = ["python", "bayesdel/convert_merged_variants_to_vcf.py", self.input().path, self.output().path]
+        args = ["python", "bayesdel/convert_merged_variants_to_vcf.py", self.input()['built_pruned'].path, self.output().path]
 
         pipeline_utils.run_process(args)
 

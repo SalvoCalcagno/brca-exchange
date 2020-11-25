@@ -884,7 +884,7 @@ class PruneUnnecessaryColumns(DefaultPipelineTask):
         pipeline_utils.check_file_for_contents(self.output()['reports_pruned'].path)
 
 
-@requires(PruneUnnecessaryColumns)
+@requires(bayesdel_processing.AddBayesdelScores)
 class FindMissingReports(DefaultPipelineTask):
     def output(self):
         return luigi.LocalTarget(os.path.join(self.artifacts_dir, "missing_reports.log"))
@@ -901,7 +901,7 @@ class FindMissingReports(DefaultPipelineTask):
         pipeline_utils.check_file_for_contents(self.output().path)
 
 
-@requires(bayesdel_processing.AddBayesdelScores)
+@requires(FindMissingReports)
 class RunDiffAndAppendChangeTypesToOutput(DefaultPipelineTask):
     def _extract_release_date(self, version_json):
         with open(version_json, 'r') as f:
