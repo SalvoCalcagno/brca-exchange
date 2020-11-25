@@ -9,6 +9,7 @@ from data_merging.utilities import isEmpty, round_sigfigs
 
 csv.field_size_limit(10000000)
 
+GENE_SYMBOLS = []
 EMPTY = "-"
 FIELDS_TO_REMOVE = ["Protein_ClinVar",
                     "Description_ClinVar",
@@ -43,8 +44,6 @@ FIELDS_TO_RENAME = {"Gene_symbol_ENIGMA": "Gene_Symbol",
 
 
 def main():
-    global GENE_SYMBOLS
-
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-i", "--input",
@@ -59,7 +58,7 @@ def main():
 
     GENE_SYMBOLS = pipeline_utils.concatenate_symbols(gene_config_df['symbol'])
 
-    if "BRCA1" not in GENE_SYMBOLS and "BRCA2" not in GENE_SYMBOLS:
+    if "BRCA12" not in GENE_SYMBOLS:
         brca_only_fields_to_remove = ["HGVS_cDNA_exLOVD",
                                      "HGVS_protein_exLOVD",
                                      "polyPhen2_result_ESP",
@@ -101,7 +100,7 @@ def updateRow(row, toRename, toRemove):
     newRow = update_basic_fields(row, toRename)
     (newRow["Reference_Sequence"], newRow["HGVS_cDNA"]) = hgvsCdnaUpdate(newRow)
     newRow["HGVS_Protein"] = hgvsProteinUpdate(row)
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         newRow["BIC_Nomenclature"] = BICUpdate(row)
     (newRow["Pathogenicity_expert"],
      newRow["Pathogenicity_all"]) = pathogenicityUpdate(newRow)
@@ -164,7 +163,7 @@ def hgvsCdnaUpdate(row):
             (refSequence, hgvs) = unpackHgvs(row["HGVS_ClinVar"])
         elif row["HGVS_cDNA_LOVD"] != EMPTY:
             (refSequence, hgvs) = unpackHgvs(row["HGVS_cDNA_LOVD"])
-        elif ("BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS) and row["HGVS_cDNA_exLOVD"] != EMPTY:
+        elif "BRCA12" in GENE_SYMBOLS and row["HGVS_cDNA_exLOVD"] != EMPTY:
             (refSequence, hgvs) = unpackHgvs(row["HGVS_cDNA_exLOVD"])
     return(refSequence, hgvs)
 
@@ -176,7 +175,7 @@ def hgvsProteinUpdate(row):
             protein = row["Protein_ClinVar"]
         elif row["HGVS_protein_LOVD"] != EMPTY:
             protein = row["HGVS_protein_LOVD"]
-        elif ("BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS) and row["HGVS_protein_exLOVD"] != EMPTY:
+        elif "BRCA12" in GENE_SYMBOLS and row["HGVS_protein_exLOVD"] != EMPTY:
             protein = row["HGVS_protein_exLOVD"]
     # 8/24/16: this is an error condition that should not occur.  There should be
     # an assertion checking the input that no value is empty.  We know in practice
@@ -203,7 +202,7 @@ def BICUpdate(row):
 def pathogenicityUpdate(row):
     pathoAll = ""
     delimiter = ""
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         pathoExpert = row["Clinical_significance_ENIGMA"]
         if pathoExpert == EMPTY:
             pathoExpert = "Not Yet Reviewed"
@@ -244,7 +243,7 @@ def determineGnomADAlleleFrequency(row):
 
 
 def selectAlleleFrequency(row):
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         gnomAD_AF = determineGnomADAlleleFrequency(row)
         if gnomAD_AF != EMPTY:
             return "%s (GnomAD)" % gnomAD_AF
@@ -272,7 +271,7 @@ def selectMaxAlleleFrequency(newRow):
 def checkDiscordantStatus(row):
     hasPathogenicClassification = False
     hasBenignClassification = False
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         relevantRows = (row["Clinical_Significance_ClinVar"], row["Clinical_significance_ENIGMA"])
     else:
         relevantRows = [row["Clinical_Significance_ClinVar"]]
@@ -307,7 +306,7 @@ def checkDiscordantStatus(row):
 def setSourceUrls(row):
     url = ""
     delimiter = ""
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         if row["URL_ENIGMA"] != EMPTY:
             for thisURL in row["URL_ENIGMA"].split(','):
                 url = "%s%s%s" % (url, delimiter, thisURL)
@@ -326,7 +325,7 @@ def setSourceUrls(row):
 def setSynonym(row):
     synonyms = set()
 
-    if "BRCA1" in GENE_SYMBOLS or "BRCA2" in GENE_SYMBOLS:
+    if "BRCA12" in GENE_SYMBOLS:
         fields = ["BIC_Nomenclature", "BIC_Nomenclature_exLOVD", "BIC_Designation_BIC", "Synonyms_ClinVar"]
     else:
         fields = ["Synonyms_ClinVar"]

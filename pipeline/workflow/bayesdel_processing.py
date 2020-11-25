@@ -76,7 +76,7 @@ class AddBayesdelScores(DefaultPipelineTask):
         os.chdir(data_merging_method_dir)
 
         args = ["python", "bayesdel/add_bayesdel_scores_to_built_file.py", '--output', self.output().path,
-                '--built-tsv', ConvertBuiltToVCF().input().path] + \
+                '--built-tsv', ConvertBuiltToVCF().input()['built_pruned'].path] + \
                 [ p.path for p in self.input()['paths']]
 
         pipeline_utils.run_process(args)
