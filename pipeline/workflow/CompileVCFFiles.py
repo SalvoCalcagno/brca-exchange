@@ -981,7 +981,7 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
         tmp_dir = tempfile.mkdtemp()
         previous_data_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
-            'output/release/artifacts/reports_pruned.tsv')
+            'output/release/artifacts/reports_with_change_types.tsv')
         version_json_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
             'output/release/metadata/version.json')
