@@ -7,6 +7,7 @@ import logging
 from math import floor, log10
 import dateutil.parser
 import os
+import pandas as pd
 
 csv.field_size_limit(10000000)
 
@@ -643,78 +644,94 @@ def main():
 
     logging.basicConfig(filename=logFile, filemode="w", level=logging.DEBUG)
 
-    v1In = csv.DictReader(open(args.v1, "r"), delimiter="\t")
-    v2In = csv.DictReader(open(args.v2, "r"), delimiter="\t")
-    removed = csv.DictWriter(open(args.removed, "w"), delimiter="\t",
-                             fieldnames=v1In.fieldnames)
-    removed.writeheader()
-    added = csv.DictWriter(open(args.added, "w"), delimiter="\t",
-                           fieldnames=v2In.fieldnames)
-    added.writeheader()
-    global added_data
-    added_data = open(args.added_data, "w")
-    global diff
-    diff = open(args.diff, "w")
-    global reports
-    if args.reports.lower() in ('yes', 'true', 't', 'y', '1'):
-        reports = True
-    else:
-        reports = False
+    # if a previous dataset is not provided or is set to None, return empty
+    # diff data and mark all variants and reports as new
+    if args.v1 is None:
+        for filename in [args.removed, args.added, args.diff, args.diff_json, args.added_data]:
+            with open(filename, 'w') as f:
+                pass
 
-    # Keep track of change types for all variants to append to final output file
-    variantChangeTypes = {}
+        output_df = pd.read_csv(args.v2, sep='\t')
+        output_df['change_type'] = CHANGE_TYPES['ADDED']
+        output_df.to_csv(args.output, sep='\t', index=False)
 
-    v1v2 = v1ToV2(v1In.fieldnames, v2In.fieldnames)
+        generateReadme(args)
 
-    # Save the old variants in a dictionary for which the pyhgvs_genomic_coordinate_38
-    # string is the key, and for which the value is the full row.
-    oldData = {}
-    newData = {}
-    if reports is True:
-        # handle reports
-        for oldRow in v1In:
-            identifier = getIdentifier(oldRow, reports)
-            # if a new identifier is assigned, this will skip over old data that don't have the property
-            if identifier is not None and identifier in list(oldRow.keys()):
-                oldData[oldRow[identifier]] = oldRow
-
-        for newRow in v2In:
-            identifier = getIdentifier(newRow, reports)
-            if identifier is not None:
-                newData[newRow[identifier]] = newRow
+        print("No previous release provided, empty diff files were created and all variants are marked as new")
 
     else:
-        # handle variants
-        for oldRow in v1In:
-            oldRow = addGsIfNecessary(oldRow)
-            oldData[oldRow[getIdentifier(oldRow, reports)]] = oldRow
-        for newRow in v2In:
-            newRow = addGsIfNecessary(newRow)
-            newData[newRow[getIdentifier(newRow, reports)]] = newRow
-    for oldVariant in list(oldData.keys()):
-        if oldVariant not in newData:
-            removed.writerow(oldData[oldVariant])
-
-    for newVariant in list(newData.keys()):
-        if newVariant not in oldData:
-            variantChangeTypes[newVariant] = CHANGE_TYPES['ADDED']
-            added.writerow(newData[newVariant])
+        v1In = csv.DictReader(open(args.v1, "r"), delimiter="\t")
+        v2In = csv.DictReader(open(args.v2, "r"), delimiter="\t")
+        removed = csv.DictWriter(open(args.removed, "w"), delimiter="\t",
+                                 fieldnames=v1In.fieldnames)
+        removed.writeheader()
+        added = csv.DictWriter(open(args.added, "w"), delimiter="\t",
+                               fieldnames=v2In.fieldnames)
+        added.writeheader()
+        global added_data
+        added_data = open(args.added_data, "w")
+        global diff
+        diff = open(args.diff, "w")
+        global reports
+        if args.reports.lower() in ('yes', 'true', 't', 'y', '1'):
+            reports = True
         else:
-            logging.debug('Finding change type...')
-            change_type = v1v2.compareRow(oldData[newVariant], newData[newVariant], reports)
-            logging.debug("newV: %s change_type: %s", newVariant, change_type)
-            assert(newVariant not in variantChangeTypes)
-            variantChangeTypes[newVariant] = change_type
+            reports = False
 
-    # Adds change_type column and values for each variant in v2 to the output
-    appendVariantChangeTypesToOutput(variantChangeTypes, args.v2, args.output)
+        # Keep track of change types for all variants to append to final output file
+        variantChangeTypes = {}
 
-    generateDiffJSONFile(diff_json, args.diff_json)
+        v1v2 = v1ToV2(v1In.fieldnames, v2In.fieldnames)
 
-    generateReadme(args)
+        # Save the old variants in a dictionary for which the pyhgvs_genomic_coordinate_38
+        # string is the key, and for which the value is the full row.
+        oldData = {}
+        newData = {}
+        if reports is True:
+            # handle reports
+            for oldRow in v1In:
+                identifier = getIdentifier(oldRow, reports)
+                # if a new identifier is assigned, this will skip over old data that don't have the property
+                if identifier is not None and identifier in list(oldRow.keys()):
+                    oldData[oldRow[identifier]] = oldRow
 
-    print("Number of variants with additions: " + str(total_variants_with_additions))
-    print("Number of variants with changes: " + str(total_variants_with_changes))
+            for newRow in v2In:
+                identifier = getIdentifier(newRow, reports)
+                if identifier is not None:
+                    newData[newRow[identifier]] = newRow
+
+        else:
+            # handle variants
+            for oldRow in v1In:
+                oldRow = addGsIfNecessary(oldRow)
+                oldData[oldRow[getIdentifier(oldRow, reports)]] = oldRow
+            for newRow in v2In:
+                newRow = addGsIfNecessary(newRow)
+                newData[newRow[getIdentifier(newRow, reports)]] = newRow
+        for oldVariant in list(oldData.keys()):
+            if oldVariant not in newData:
+                removed.writerow(oldData[oldVariant])
+
+        for newVariant in list(newData.keys()):
+            if newVariant not in oldData:
+                variantChangeTypes[newVariant] = CHANGE_TYPES['ADDED']
+                added.writerow(newData[newVariant])
+            else:
+                logging.debug('Finding change type...')
+                change_type = v1v2.compareRow(oldData[newVariant], newData[newVariant], reports)
+                logging.debug("newV: %s change_type: %s", newVariant, change_type)
+                assert(newVariant not in variantChangeTypes)
+                variantChangeTypes[newVariant] = change_type
+
+        # Adds change_type column and values for each variant in v2 to the output
+        appendVariantChangeTypesToOutput(variantChangeTypes, args.v2, args.output)
+
+        generateDiffJSONFile(diff_json, args.diff_json)
+
+        generateReadme(args)
+
+        print("Number of variants with additions: " + str(total_variants_with_additions))
+        print("Number of variants with changes: " + str(total_variants_with_changes))
 
 
 if __name__ == "__main__":
