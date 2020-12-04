@@ -924,7 +924,7 @@ class RunDiffAndAppendChangeTypesToOutput(DefaultPipelineTask):
         tmp_dir = tempfile.mkdtemp()
         previous_data_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
-            'output/release/built_with_change_types.tsv')
+            'output/release/built_with_change_types.tsv') if self.cfg.first_release is False else None
         version_json_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
             'output/release/metadata/version.json')
@@ -981,7 +981,7 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
         tmp_dir = tempfile.mkdtemp()
         previous_data_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
-            'output/release/artifacts/reports_with_change_types.tsv')
+            'output/release/artifacts/reports_with_change_types.tsv') if self.cfg.first_release is False else None
         version_json_path = pipeline_utils.extract_file(
             self.cfg.previous_release_tar, tmp_dir,
             'output/release/metadata/version.json')

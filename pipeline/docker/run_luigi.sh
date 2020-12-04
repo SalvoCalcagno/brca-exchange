@@ -12,7 +12,7 @@ BRCA_RESOURCES=/files/resources
 
 if [ "$#" -lt "4" ]; then
     echo "Usage: run_luigi.sh [PRIORS_REFERENCES] [OUTPUT_DIR_HOST] [PRIORS_DOCKER_IMAGE_NAME] [VR_DOCKER_IMAGE_NAME] \
-        [TASK] [WORKERS] [GENE_CONFIG_FILE] [VICTOR_DOCKER_IMAGE] [VICTOR_DATA_DIR]"
+        [TASK] [WORKERS] [GENE_CONFIG_FILE] [FIRST_RELEASE] [PREVIOUS_RELEASE_TAR] [VICTOR_DOCKER_IMAGE] [VICTOR_DATA_DIR]"
 fi
 
 PRIORS_REFERENCES=$1
@@ -22,9 +22,11 @@ VR_DOCKER_IMAGE=$4
 LUIGI_TASK=${5}
 N_WORKERS=${6}
 GENE_CONFIG=${7}
-VICTOR_DOCKER_IMAGE=$8
-VICTOR_DATA_DIR=$9
-SEQ_REPO_DIR=${10:-}
+FIRST_RELEASE=${8}
+PREVIOUS_RELEASE_TAR=${9}
+VICTOR_DOCKER_IMAGE=$10
+VICTOR_DATA_DIR=$11
+SEQ_REPO_DIR=${12:-}
 
 PREVIOUS_RELEASE_TAR=/files/previous_release.tar.gz
 
@@ -52,6 +54,7 @@ python -m luigi --logging-conf-file luigi_log_configuration.conf --module Compil
   --PipelineParams-output-dir-host ${OUTPUT_DIR_HOST} \
   --PipelineParams-release-notes ${RELEASE_NOTES} \
   --PipelineParams-gene-config-path ${GENE_CONFIG} \
+  --PipelineParams-first-release ${FIRST_RELEASE} \
   --PipelineParams-victor-docker-image-name ${VICTOR_DOCKER_IMAGE} \
   --PipelineParams-victor-data-dir ${VICTOR_DATA_DIR} \
   --PipelineParams-seq-repo-dir ${SEQ_REPO_DIR} \

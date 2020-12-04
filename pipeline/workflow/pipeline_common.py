@@ -60,6 +60,9 @@ class PipelineParams(luigi.Config):
     gene_config_path = luigi.Parameter(default=str(None),
                                        description='gene metadata config file')
 
+    first_release = luigi.Parameter(default=False,
+                                       description='determines whether this is the first release for this dataset')
+
     seq_repo_dir = luigi.Parameter(default=str(None),
                                    description='directory of seq_repo')
 

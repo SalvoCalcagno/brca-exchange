@@ -5,7 +5,8 @@ CREDENTIALS_PATH=$(realpath $2)
 PREVIOUS_RELEASE_DIR=$(realpath $3)
 GENE_CONFIG_FILENAME=$(realpath $4)
 
-GIT_COMMIT=${5:-"master"}
+FIRST_RELEASE=${5:-false}
+GIT_COMMIT=${6:-"master"}
 
 DATA_DATE="$(date +%Y-%m-%d)"
 WDIR="${ROOT_DIR}/data_release_${DATA_DATE}"
@@ -34,5 +35,5 @@ echo "cd ${CODE_BASE}/pipeline && make [cmd]"
 
 echo "Kicking off pipeline!"
 cd "${CODE_BASE}/pipeline"
-make GENE_CONFIG_FILENAME="${GENE_CONFIG_FILENAME}" build-release
+make GENE_CONFIG_FILENAME="${GENE_CONFIG_FILENAME}" FIRST_RELEASE="${FIRST_RELEASE}" build-release
 
