@@ -120,7 +120,7 @@ RUN_TASK_CMD := docker run $(COMMON_DOCKER_ARGS) $(PIPELINE_IMAGE) /opt/brca-exc
 run-task: ## Running a specific task
 	$(RUN_TASK_CMD) $(RUN_ARGS) $(LUIGI_WORKERS) $(GENE_CONFIG_FILE) $(FIRST_RELEASE) ${VICTOR_IMAGE} ${VICTOR_DATA_DIR}/$(DATA_DATE) $(SEQ_REPO_DIR)
 
-PIPELINE_ARGS := --PipelineParams-output-dir /files/data/output --PipelineParams-file-parent-dir /files/data --PipelineParams-date $(DATA_DATE) --PipelineParams-gene-config-path $(GENE_CONFIG_FILE) $(FIRST_RELEASE)
+PIPELINE_ARGS := --PipelineParams-output-dir /files/data/output --PipelineParams-file-parent-dir /files/data --PipelineParams-date $(DATA_DATE) --PipelineParams-gene-config-path $(GENE_CONFIG_FILE) --PipelineParams-first-release $(FIRST_RELEASE)
 
 force-run-task: ## Running a specific task (deleting its dependencies first)
 	docker run $(COMMON_DOCKER_ARGS) $(PIPELINE_IMAGE) bash -c 'cd /opt/brca-exchange/pipeline/workflow && python prune_output_files.py CompileVCFFiles $(RUN_ARGS) $(RUN_ARGS) $(PIPELINE_ARGS)'
