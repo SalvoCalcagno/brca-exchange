@@ -28,8 +28,6 @@ VICTOR_DOCKER_IMAGE=$10
 VICTOR_DATA_DIR=$11
 SEQ_REPO_DIR=${12:-}
 
-PREVIOUS_RELEASE_TAR=/files/previous_release.tar.gz
-
 RELEASE_NOTES=/files/release_notes.txt
 
 CODE_MNT=$(mount | grep /opt/brca-exchange)
@@ -55,6 +53,7 @@ python -m luigi --logging-conf-file luigi_log_configuration.conf --module Compil
   --PipelineParams-release-notes ${RELEASE_NOTES} \
   --PipelineParams-gene-config-path ${GENE_CONFIG} \
   --PipelineParams-first-release ${FIRST_RELEASE} \
+  --PipelineParams-previous-release-tar ${PREVIOUS_RELEASE_TAR} \
   --PipelineParams-victor-docker-image-name ${VICTOR_DOCKER_IMAGE} \
   --PipelineParams-victor-data-dir ${VICTOR_DATA_DIR} \
   --PipelineParams-seq-repo-dir ${SEQ_REPO_DIR} \
