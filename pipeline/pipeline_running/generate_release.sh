@@ -3,8 +3,7 @@
 ROOT_DIR=$(realpath $1)
 CREDENTIALS_PATH=$(realpath $2)
 PREVIOUS_RELEASE_DIR=$(realpath $3)
-GENE_CONFIG_FILENAME=$(realpath $4)
-
+GENE_CONFIG_FILENAME=$4
 FIRST_RELEASE=${5:-false}
 GIT_COMMIT=${6:-"master"}
 
