@@ -76,7 +76,7 @@ def main():
     rowCount = 0
     for row in csvIn:
         rowCount += 1
-        csvOut.writerow(updateRow(row, FIELDS_TO_RENAME, FIELDS_TO_REMOVE))
+        csvOut.writerow(updateRow(row, FIELDS_TO_RENAME, FIELDS_TO_REMOVE, geneSymbols))
     print("Process complete, aggregated %s variants." % (rowCount))
 
 
