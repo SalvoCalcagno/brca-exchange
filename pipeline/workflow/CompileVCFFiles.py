@@ -922,15 +922,19 @@ class RunDiffAndAppendChangeTypesToOutput(DefaultPipelineTask):
         os.chdir(utilities_method_dir)
 
         tmp_dir = tempfile.mkdtemp()
-        previous_data_path = pipeline_utils.extract_file(
-            self.cfg.previous_release_tar, tmp_dir,
-            'output/release/built_with_change_types.tsv') if self.cfg.first_release is False else None
-        version_json_path = pipeline_utils.extract_file(
-            self.cfg.previous_release_tar, tmp_dir,
-            'output/release/metadata/version.json')
-        previous_release_date = self._extract_release_date(version_json_path)
-        previous_release_date_str = datetime.datetime.strftime(
-            previous_release_date, '%m-%d-%Y')
+
+        if self.cfg.first_release is False:
+            previous_data_path = pipeline_utils.extract_file(
+                self.cfg.previous_release_tar, tmp_dir,
+                'output/release/artifacts/reports_with_change_types.tsv')
+            version_json_path = pipeline_utils.extract_file(
+                self.cfg.previous_release_tar, tmp_dir,
+                'output/release/metadata/version.json')
+            previous_release_date = self._extract_release_date(version_json_path)
+            previous_release_date_str = datetime.datetime.strftime(previous_release_date, '%m-%d-%Y')
+        else:
+            previous_data_path = "None"
+            previous_release_date_str = "None"
 
         args = ["python", "releaseDiff.py", "--v2",
                 os.path.join(self.artifacts_dir, "built_pruned.tsv"), "--v1",
@@ -979,15 +983,18 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
         os.chdir(utilities_method_dir)
 
         tmp_dir = tempfile.mkdtemp()
-        previous_data_path = pipeline_utils.extract_file(
-            self.cfg.previous_release_tar, tmp_dir,
-            'output/release/artifacts/reports_with_change_types.tsv') if self.cfg.first_release is False else None
-        version_json_path = pipeline_utils.extract_file(
-            self.cfg.previous_release_tar, tmp_dir,
-            'output/release/metadata/version.json')
-        previous_release_date = self._extract_release_date(version_json_path)
-        previous_release_date_str = datetime.datetime.strftime(
-            previous_release_date, '%m-%d-%Y')
+        if self.cfg.first_release is False:
+            previous_data_path = pipeline_utils.extract_file(
+                self.cfg.previous_release_tar, tmp_dir,
+                'output/release/artifacts/reports_with_change_types.tsv')
+            version_json_path = pipeline_utils.extract_file(
+                self.cfg.previous_release_tar, tmp_dir,
+                'output/release/metadata/version.json')
+            previous_release_date = self._extract_release_date(version_json_path)
+            previous_release_date_str = datetime.datetime.strftime(previous_release_date, '%m-%d-%Y')
+        else:
+            previous_data_path = "None"
+            previous_release_date_str = "None"
 
         args = ["python", "releaseDiff.py", "--v2",
                 os.path.join(self.artifacts_dir, "reports_pruned.tsv"), "--v1", previous_data_path,

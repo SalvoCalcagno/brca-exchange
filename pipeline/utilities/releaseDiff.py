@@ -646,7 +646,7 @@ def main():
 
     # if a previous dataset is not provided or is set to None, return empty
     # diff data and mark all variants and reports as new
-    if args.v1 is None:
+    if args.v1 == "None":
         for filename in [args.removed, args.added, args.diff, args.diff_json, args.added_data]:
             with open(filename, 'w') as f:
                 pass
