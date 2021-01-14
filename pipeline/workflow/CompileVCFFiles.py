@@ -923,7 +923,7 @@ class RunDiffAndAppendChangeTypesToOutput(DefaultPipelineTask):
 
         tmp_dir = tempfile.mkdtemp()
 
-        if self.cfg.first_release is False:
+        if pipeline_utils.check_bool(self.cfg.first_release, False) is False:
             previous_data_path = pipeline_utils.extract_file(
                 self.cfg.previous_release_tar, tmp_dir,
                 'output/release/artifacts/reports_with_change_types.tsv')
@@ -983,7 +983,7 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
         os.chdir(utilities_method_dir)
 
         tmp_dir = tempfile.mkdtemp()
-        if self.cfg.first_release is False:
+        if pipeline_utils.check_bool(self.cfg.first_release, False) is False:
             previous_data_path = pipeline_utils.extract_file(
                 self.cfg.previous_release_tar, tmp_dir,
                 'output/release/artifacts/reports_with_change_types.tsv')
