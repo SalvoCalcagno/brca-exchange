@@ -178,7 +178,7 @@ def check_bool(val, default=False):
         return True
     elif val == False:
         return False
-    elif isinstance(s, str):
+    elif isinstance(val, str):
         if val.lower() in ['t', 'true', 'yes', 'y']:
             return True
         elif val.lower() in ['f', 'false', 'no', 'n']:

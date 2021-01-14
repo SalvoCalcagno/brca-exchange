@@ -926,7 +926,7 @@ class RunDiffAndAppendChangeTypesToOutput(DefaultPipelineTask):
         if pipeline_utils.check_bool(self.cfg.first_release, False) is False:
             previous_data_path = pipeline_utils.extract_file(
                 self.cfg.previous_release_tar, tmp_dir,
-                'output/release/artifacts/reports_with_change_types.tsv')
+                'output/release/built_with_change_types.tsv')
             version_json_path = pipeline_utils.extract_file(
                 self.cfg.previous_release_tar, tmp_dir,
                 'output/release/metadata/version.json')
@@ -986,7 +986,7 @@ class RunDiffAndAppendChangeTypesToOutputReports(DefaultPipelineTask):
         if pipeline_utils.check_bool(self.cfg.first_release, False) is False:
             previous_data_path = pipeline_utils.extract_file(
                 self.cfg.previous_release_tar, tmp_dir,
-                'output/release/artifacts/reports_with_change_types.tsv')
+                'output/release/artifacts/reports.tsv')
             version_json_path = pipeline_utils.extract_file(
                 self.cfg.previous_release_tar, tmp_dir,
                 'output/release/metadata/version.json')
