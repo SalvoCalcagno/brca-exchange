@@ -184,7 +184,7 @@ def check_bool(val, default=False):
         elif val.lower() in ['f', 'false', 'no', 'n']:
             return False
         else:
-            print "**** WARNING: Could not interpret boolean val of string, returning default ****\n"
+            print("**** WARNING: Could not interpret boolean val of string, returning default ****\n")
     else:
         return default
 
