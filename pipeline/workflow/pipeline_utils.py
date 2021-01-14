@@ -174,14 +174,14 @@ def extract_file(archive_path, tmp_dir, file_path):
 
 
 def check_bool(val, default=False):
-    if val == True
+    if val == True:
         return True
-    elif val == False
+    elif val == False:
         return False
     elif isinstance(s, str):
         if val.lower() in ['t', 'true', 'yes', 'y']:
             return True
-        elif val.lower() in ['f', 'false', 'no', 'n']
+        elif val.lower() in ['f', 'false', 'no', 'n']:
             return False
         else:
             print "**** WARNING: Could not interpret boolean val of string, returning default ****\n"
