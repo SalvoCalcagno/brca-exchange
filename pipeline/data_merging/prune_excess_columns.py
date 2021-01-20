@@ -60,7 +60,7 @@ def main():
 
 
 def prune_columns(df, gene_symbols):
-    if "BRCA1" not in gene_symbols and "BRCA2" not in gene_symbols:
+    if "BRCA12" not in gene_symbols:
         return df.drop(BRCA_ONLY_FIELDS, axis=1, errors='ignore')
     return df
 
