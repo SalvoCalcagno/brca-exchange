@@ -93,10 +93,6 @@ def aggregate_data(df_var, df_cov):
 
     df_all = calculate_faf95_cols(df_all)
 
-    df_all['max_faf_or_af'] = df_all['faf95_max'].fillna(df_all['AF_popmax'])
-
-    df_all['max_faf_or_af_pop'] = df_all['faf95_popmax'].fillna(df_all['popmax'])
-
     df_all['is_snv'] = (df_all['end'] - df_all['start']) == 1
 
     return df_all
@@ -107,17 +103,11 @@ def add_filter_flag_col(df, cols):
         lambda filt_el: len(set(filt_el.split(';')).intersection(cols)) > 0)
 
 
-def add_read_depth_col(df, threshold):
-    df['sufficient_read_depth'] = (df['pos_mean'] >= threshold) & (
-            df['pos_median'] >= threshold)
-
-
-def process_v2(df_var2, df_cov2, read_depth_thresh, resource_dir):
+def process_v2(df_var2, df_cov2, resource_dir):
     agg_v2 = aggregate_data(df_var2, df_cov2)
 
     agg_v2['src'] = 'v2'
     add_filter_flag_col(agg_v2, set(['InbreedingCoeff', 'RF', 'AC0']))
-    add_read_depth_col(agg_v2, read_depth_thresh)
 
     variants = [var_name_to_obj(v) for v in agg_v2['var_name']]
 
@@ -143,34 +133,55 @@ def process_v2(df_var2, df_cov2, read_depth_thresh, resource_dir):
     return agg_v2_lift_over
 
 
-def process_v3(df_var3, df_cov3, read_depth_thresh):
+def process_v3(df_var3, df_cov3):
     agg_v3 = aggregate_data(df_var3, df_cov3)
 
     agg_v3['src'] = 'v3'
     add_filter_flag_col(agg_v3, set(['AS_VQSR', 'AC0']))
-    add_read_depth_col(agg_v3, read_depth_thresh)
     return agg_v3
 
 
 def determine_evidence_code_per_variant(r):
-    if not r['sufficient_read_depth']:
+
+    read_depth = min(df['pos_mean'], df['pos_median'])
+    faf = r['faf95_max']
+    BA1_or_BS1 = faf > 0.0001
+
+    # read depth threshold is 20 for BA1 and BS1
+    if BA1_or_BS1 & read_depth < 20:
+        return 'fail_insufficient_read_depth'
+    if not BA1_or_BS1 & read_depth < 25:
         return 'fail_insufficient_read_depth'
 
     if r['vcf_filter_flag']:
         return 'fail_vcf_filter_flag'
 
-    if r['max_faf_or_af'] > 0.001:
+    if faf > 0.001:
         return 'BA1'
 
-    if r['max_faf_or_af'] > 0.0001:
+    if faf > 0.0001:
         return 'BS1'
 
-    if not np.isnan(r['max_faf_or_af']):
-        # low max_faf_or_af
+    # this one doesn't make sense
+    # if faf > 0 & faf < 0.0001:
+        # return code_missing
+
+    if not np.isnan(faf):
         return 'code_missing'
 
-    if r['is_snv']:
+    # if faf is 0 or unavailable, and allele count > 0:
+        # return need_review
+
+
+    # if the FAF is zero (or not provided) then:
+    #    if the allele count is 0:
+    #        set PM2_Supporting
+
+    if r['is_snv'] & faf == 0 & ac = 0:
+        # only if faf is 0 or na and allele count is 0
+        # assert allele count is a number
         return 'pm2_supporting'
+
 
     return 'need_review'
 
@@ -223,9 +234,9 @@ def add_final_code_column(df):
     return df.merge(pd.DataFrame({'in_v2_and_v3' : v2_and_v3, 'final_code': per_variant_code}).reset_index(), how='left')
 
 
-def extract_variant_scoring_data(df_cov2, df_cov3, df_var2, df_var3, read_depth_thresh, resource_dir):
-    agg_v2 = process_v2(df_var2, df_cov2, read_depth_thresh, resource_dir)
-    agg_v3 = process_v3(df_var3, df_cov3, read_depth_thresh)
+def extract_variant_scoring_data(df_cov2, df_cov3, df_var2, df_var3, resource_dir):
+    agg_v2 = process_v2(df_var2, df_cov2, resource_dir)
+    agg_v3 = process_v3(df_var3, df_cov3)
 
     df_overall = pd.concat([agg_v2, agg_v3]).reset_index(drop=True)
 
@@ -278,9 +289,7 @@ def main(data_dir, output_path, resource_dir, gene_config_path):
     df_var2 = pd.read_parquet(data_dir / 'df_var_v2.parquet')
     df_var3 = pd.read_parquet(data_dir / 'df_var_v3.parquet')
 
-    read_depth_thresh = 30
-
-    df = extract_variant_scoring_data(df_cov2, df_cov3, df_var2, df_var3, read_depth_thresh, Path(resource_dir))
+    df = extract_variant_scoring_data(df_cov2, df_cov3, df_var2, df_var3, Path(resource_dir))
 
     # add var_name columns with different normalization to join data with other sources (e.g. brca exchange output data)
     strand_dict = { int(r['chr']) : r[config.STRAND_COL] for _, r in cfg_df.iterrows() }
