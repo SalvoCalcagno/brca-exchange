@@ -143,8 +143,10 @@ def process_v3(df_var3, df_cov3):
 
 def determine_evidence_code_per_variant(r):
 
-    read_depth = min(df['pos_mean'], df['pos_median'])
+    read_depth = min(r['pos_mean'], r['pos_median'])
     faf = r['faf95_max']
+    pop = r['faf95_popmax']
+    relevant_ac = r["AC_" + pop]
     BA1_or_BS1 = faf > 0.0001
 
     # read depth threshold is 20 for BA1 and BS1
@@ -162,26 +164,20 @@ def determine_evidence_code_per_variant(r):
     if faf > 0.0001:
         return 'BS1'
 
-    # this one doesn't make sense
-    # if faf > 0 & faf < 0.0001:
-        # return code_missing
+    if faf > 0 & faf < 0.0001:
+        return 'code_missing'
 
     if not np.isnan(faf):
         return 'code_missing'
 
-    # if faf is 0 or unavailable, and allele count > 0:
-        # return need_review
+    if faf == 0:
+        if relevant_ac > 0:
+            return need_review
+        else:
+            return 'pm2_supporting'
 
-
-    # if the FAF is zero (or not provided) then:
-    #    if the allele count is 0:
-    #        set PM2_Supporting
-
-    if r['is_snv'] & faf == 0 & ac = 0:
-        # only if faf is 0 or na and allele count is 0
-        # assert allele count is a number
+    if r['is_snv'] & faf == 0 & relevant_ac == 0:
         return 'pm2_supporting'
-
 
     return 'need_review'
 
