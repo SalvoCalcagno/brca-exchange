@@ -175,7 +175,7 @@ def determine_evidence_code_per_variant(r):
 
     if faf == 0:
         if relevant_ac > 0:
-            return need_review
+            return 'need_review'
         else:
             return 'pm2_supporting'
 
