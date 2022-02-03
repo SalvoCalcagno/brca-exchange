@@ -153,9 +153,9 @@ def determine_evidence_code_per_variant(r):
     BA1_or_BS1 = faf > 0.0001
 
     # read depth threshold is 20 for BA1 and BS1
-    if BA1_or_BS1 is True & (read_depth < 20):
+    if BA1_or_BS1 is True and (read_depth < 20):
         return 'fail_insufficient_read_depth'
-    if BA1_or_BS1 is False & (read_depth < 25):
+    if BA1_or_BS1 is False and (read_depth < 25):
         return 'fail_insufficient_read_depth'
 
     if r['vcf_filter_flag']:
@@ -167,7 +167,7 @@ def determine_evidence_code_per_variant(r):
     if faf > 0.0001:
         return 'BS1'
 
-    if faf > 0 & (faf < 0.0001):
+    if faf > 0 and (faf < 0.0001):
         return 'code_missing'
 
     if not np.isnan(faf):
@@ -179,7 +179,7 @@ def determine_evidence_code_per_variant(r):
         else:
             return 'pm2_supporting'
 
-    if r['is_snv'] & (faf == 0) & (relevant_ac == 0 or np.isnan(relevant_ac)):
+    if r['is_snv'] and (faf == 0) and (relevant_ac == 0 or np.isnan(relevant_ac)):
         return 'pm2_supporting'
 
     return 'need_review'
