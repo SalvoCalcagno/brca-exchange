@@ -168,19 +168,19 @@ def determine_evidence_code_per_variant(r):
         return 'BS1'
 
     if faf > 0 and (faf < 0.0001):
-        return 'code_missing'
+        return 'code_missing_faf>0_faf<.001'
 
     if not np.isnan(faf):
-        return 'code_missing'
+        return 'code_missing_faf_isnan'
 
     if faf == 0:
         if relevant_ac > 0:
-            return 'need_review'
+            return 'need_review_faf==0_rel_ac>0'
         else:
-            return 'pm2_supporting'
+            return 'pm2_supporting_faf==0_rel_ac==0'
 
     if r['is_snv'] and (faf == 0) and (relevant_ac == 0 or np.isnan(relevant_ac)):
-        return 'pm2_supporting'
+        return 'pm2_supporting_snv_faf==0_rel_ac==0_or_rel_ac_isnan'
 
     return 'need_review'
 
@@ -218,7 +218,7 @@ def add_final_code_column(df):
             if c1 in success_codes and c2 not in success_codes:
                 return c1
 
-            assert c1 in success_codes and c2 in success_codes
+            # assert c1 in success_codes and c2 in success_codes
             
             if c1 == c2:
                 return c1
